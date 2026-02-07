@@ -1,6 +1,5 @@
-# Define the AWS provider configuration.
 provider "aws" {
-  region = "us-east-1"  # Replace with your desired AWS region.
+  region = "us-east-1"
 }
 
 variable "cidr" {
@@ -8,8 +7,8 @@ variable "cidr" {
 }
 
 resource "aws_key_pair" "example" {
-  key_name   = "terraform-demo-abhi"  # Replace with your desired key name
-  public_key = file("~/.ssh/id_ed25519.pub")  # ✅ Updated
+  key_name   = "terraform-demo-abhi"
+  public_key = file("~/.ssh/id_ed25519.pub")
 }
 
 resource "aws_vpc" "myvpc" {
@@ -46,7 +45,7 @@ resource "aws_security_group" "webSg" {
   vpc_id = aws_vpc.myvpc.id
 
   ingress {
-    description = "HTTP from VPC"
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -83,16 +82,17 @@ resource "aws_instance" "server" {
   connection {
     type        = "ssh"
     user        = "ubuntu"
-    private_key = file("~/.ssh/id_ed25519")  
+    private_key = file("~/.ssh/id_ed25519")
     host        = self.public_ip
   }
 
-  # File provisioner to copy a file from local to the remote EC2 instance
+  # File provisioner (UPDATED)
   provisioner "file" {
-    source      = "app.py"
-    destination = "/home/ubuntu/app.py"
+    source      = "flask-app.py"
+    destination = "/home/ubuntu/flask-app.py"
   }
 
+  # Remote exec (UPDATED)
   provisioner "remote-exec" {
     inline = [
       "echo 'Hello from the remote instance'",
@@ -100,7 +100,7 @@ resource "aws_instance" "server" {
       "sudo apt-get install -y python3-pip",
       "cd /home/ubuntu",
       "sudo pip3 install flask",
-      "sudo python3 app.py &",
+      "sudo python3 flask-app.py &"
     ]
   }
 }
